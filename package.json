@@ -1,0 +1,29 @@
+{
+  "name": "nft-marketplace-sell-trade-your-images",
+  "version": "1.0.0",
+  "description": "Image-first NFT marketplace MVP with uploads, cataloging, view tracking, and seller contact links.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/www-infinity4/NFT-Marketplace-Sell-Trade-Your-Images.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/www-infinity4/NFT-Marketplace-Sell-Trade-Your-Images/issues"
+  },
+  "homepage": "https://github.com/www-infinity4/NFT-Marketplace-Sell-Trade-Your-Images#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "multer": "^2.1.1"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2"
+  }
+}

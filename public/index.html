@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NFT Marketplace</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="nav">
+        <a class="brand" href="/">NovaMint Market</a>
+        <a class="button secondary" href="/upload.html">Upload Artwork</a>
+      </nav>
+
+      <section class="hero-content">
+        <div>
+          <p class="eyebrow">Sell & Trade Your Images</p>
+          <h1>Turn your best visuals into a tradable, trackable NFT catalog.</h1>
+          <p class="hero-copy">
+            Upload artwork, receive a unique catalog number, track real viewer interest,
+            and connect buyers directly with creators.
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="/upload.html">Create Listing</a>
+            <a class="button secondary" href="#marketplace">Explore Market</a>
+          </div>
+        </div>
+
+        <div class="hero-stats glass">
+          <div>
+            <span class="stat-label">Creator-first</span>
+            <strong>Direct trader contact</strong>
+          </div>
+          <div>
+            <span class="stat-label">Cataloged</span>
+            <strong>Unique marketplace ID</strong>
+          </div>
+          <div>
+            <span class="stat-label">Live metrics</span>
+            <strong>Views + estimated value</strong>
+          </div>
+        </div>
+      </section>
+    </header>
+
+    <main class="page-shell">
+      <section id="marketplace" class="section-head">
+        <div>
+          <p class="eyebrow">Live marketplace</p>
+          <h2>Fresh listings from image creators</h2>
+        </div>
+        <p class="muted">Every listing is persisted locally and tracked as buyers browse.</p>
+      </section>
+
+      <section id="feedback" class="status-card hidden"></section>
+      <section id="market-grid" class="grid"></section>
+      <template id="empty-state">
+        <article class="glass empty-state">
+          <h3>No NFTs listed yet</h3>
+          <p>Upload the first image to launch the catalog.</p>
+          <a class="button" href="/upload.html">Upload now</a>
+        </article>
+      </template>
+    </main>
+
+    <script src="/js/main.js" defer></script>
+  </body>
+</html>

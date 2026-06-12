@@ -1,0 +1,141 @@
+const express = require('express');
+const multer = require('multer');
+const path = require('node:path');
+const fs = require('node:fs');
+const { CatalogStore, ensureDirectory } = require('./src/catalogStore');
+
+function createUploadMiddleware(uploadsDir) {
+  ensureDirectory(uploadsDir);
+
+  const storage = multer.diskStorage({
+    destination: (_req, _file, callback) => {
+      callback(null, uploadsDir);
+    },
+    filename: (_req, file, callback) => {
+      const extension = path.extname(file.originalname) || '.png';
+      const safeBase = path
+        .basename(file.originalname, extension)
+        .replace(/[^a-z0-9_-]+/gi, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 40) || 'nft-image';
+      callback(null, `${Date.now()}-${safeBase}${extension.toLowerCase()}`);
+    }
+  });
+
+  return multer({
+    storage,
+    limits: {
+      fileSize: 5 * 1024 * 1024
+    },
+    fileFilter: (_req, file, callback) => {
+      if (file.mimetype.startsWith('image/')) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('Only image uploads are supported.'));
+    }
+  });
+}
+
+function mapNft(nft) {
+  return {
+    ...nft,
+    hasContactLink: Boolean(nft.contactLink)
+  };
+}
+
+function createApp(options = {}) {
+  const rootDir = options.rootDir || __dirname;
+  const publicDir = options.publicDir || path.join(rootDir, 'public');
+  const uploadsDir = options.uploadsDir || path.join(rootDir, 'uploads');
+  const dataDir = options.dataDir || path.join(rootDir, 'data');
+  const store = options.store || new CatalogStore({ dataDir });
+  const upload = createUploadMiddleware(uploadsDir);
+  const app = express();
+
+  ensureDirectory(publicDir);
+  ensureDirectory(uploadsDir);
+  ensureDirectory(dataDir);
+
+  app.use(express.json());
+  app.use('/uploads', express.static(uploadsDir, { fallthrough: false }));
+  app.use(express.static(publicDir));
+
+  app.get('/api/health', (_req, res) => {
+    res.json({ ok: true });
+  });
+
+  app.get('/api/nfts', (_req, res) => {
+    res.json({ items: store.list().map(mapNft) });
+  });
+
+  app.get('/api/nfts/:catalogNumber', (req, res) => {
+    const nft = store.get(req.params.catalogNumber);
+    if (!nft) {
+      res.status(404).json({ error: 'NFT not found.' });
+      return;
+    }
+
+    res.json({ item: mapNft(nft) });
+  });
+
+  app.post('/api/nfts/:catalogNumber/view', (req, res) => {
+    const nft = store.incrementViews(req.params.catalogNumber);
+    if (!nft) {
+      res.status(404).json({ error: 'NFT not found.' });
+      return;
+    }
+
+    res.json({ item: mapNft(nft) });
+  });
+
+  app.post('/api/nfts', upload.single('image'), (req, res) => {
+    if (!req.file) {
+      res.status(400).json({ error: 'An image is required.' });
+      return;
+    }
+
+    const nft = store.create({
+      title: req.body.title,
+      creator: req.body.creator,
+      description: req.body.description,
+      askingPrice: req.body.askingPrice,
+      contactLink: req.body.contactLink,
+      imageUrl: `/uploads/${req.file.filename}`,
+      imageName: req.file.originalname
+    });
+
+    res.status(201).json({ item: mapNft(nft) });
+  });
+
+  app.use((req, res) => {
+    if (req.path.startsWith('/api/')) {
+      res.status(404).json({ error: 'Not found.' });
+      return;
+    }
+
+    const indexFile = path.join(publicDir, 'index.html');
+    if (fs.existsSync(indexFile)) {
+      res.sendFile(indexFile);
+      return;
+    }
+
+    res.status(404).send('Not found.');
+  });
+
+  app.use((error, _req, res, _next) => {
+    if (error instanceof multer.MulterError || error.message === 'Only image uploads are supported.') {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+
+    res.status(500).json({ error: 'Unexpected server error.' });
+  });
+
+  return app;
+}
+
+module.exports = {
+  createApp
+};
