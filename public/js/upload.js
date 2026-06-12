@@ -27,7 +27,7 @@ form.addEventListener('submit', async (event) => {
     );
     form.reset();
     window.setTimeout(() => {
-      window.location.href = `/nft.html?catalog=${payload.item.catalogNumber}`;
+      window.location.href = `nft.html?catalog=${payload.item.catalogNumber}`;
     }, 700);
   } catch (error) {
     showFeedback(error.message, 'error');
