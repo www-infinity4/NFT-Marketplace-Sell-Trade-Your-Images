@@ -90,3 +90,32 @@ test('rejects non-image uploads', async () => {
 
   fs.rmSync(tempRoot, { recursive: true, force: true });
 });
+
+test('rate limits repeated upload attempts', async () => {
+  const { app, tempRoot } = makeTempApp();
+
+  for (let index = 0; index < 12; index += 1) {
+    await request(app)
+      .post('/api/nfts')
+      .field('title', `Art ${index}`)
+      .attach('image', Buffer.from('fake-image'), {
+        filename: `piece-${index}.png`,
+        contentType: 'image/png'
+      })
+      .expect(201);
+  }
+
+  await request(app)
+    .post('/api/nfts')
+    .field('title', 'Art overflow')
+    .attach('image', Buffer.from('fake-image'), {
+      filename: 'overflow.png',
+      contentType: 'image/png'
+    })
+    .expect(429)
+    .expect((response) => {
+      assert.match(response.body.error, /Too many requests/);
+    });
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});

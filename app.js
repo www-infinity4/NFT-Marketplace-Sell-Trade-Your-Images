@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('node:path');
 const fs = require('node:fs');
 const { CatalogStore, ensureDirectory } = require('./src/catalogStore');
+const IMAGE_UPLOAD_ERROR = 'Only image uploads are supported.';
 
 function createUploadMiddleware(uploadsDir) {
   ensureDirectory(uploadsDir);
@@ -33,9 +34,35 @@ function createUploadMiddleware(uploadsDir) {
         return;
       }
 
-      callback(new Error('Only image uploads are supported.'));
+      callback(new Error(IMAGE_UPLOAD_ERROR));
     }
   });
+}
+
+function createRateLimiter({ windowMs, maxRequests }) {
+  const requests = new Map();
+
+  return (req, res, next) => {
+    const key = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const now = Date.now();
+    const entry = requests.get(key);
+
+    if (!entry || now > entry.resetAt) {
+      requests.set(key, { count: 1, resetAt: now + windowMs });
+      next();
+      return;
+    }
+
+    if (entry.count >= maxRequests) {
+      const retryAfterSeconds = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
+      res.set('Retry-After', String(retryAfterSeconds));
+      res.status(429).json({ error: 'Too many requests. Please try again shortly.' });
+      return;
+    }
+
+    entry.count += 1;
+    next();
+  };
 }
 
 function mapNft(nft) {
@@ -52,6 +79,8 @@ function createApp(options = {}) {
   const dataDir = options.dataDir || path.join(rootDir, 'data');
   const store = options.store || new CatalogStore({ dataDir });
   const upload = createUploadMiddleware(uploadsDir);
+  const uploadLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 12 });
+  const viewLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 120 });
   const app = express();
 
   ensureDirectory(publicDir);
@@ -80,7 +109,7 @@ function createApp(options = {}) {
     res.json({ item: mapNft(nft) });
   });
 
-  app.post('/api/nfts/:catalogNumber/view', (req, res) => {
+  app.post('/api/nfts/:catalogNumber/view', viewLimiter, (req, res) => {
     const nft = store.incrementViews(req.params.catalogNumber);
     if (!nft) {
       res.status(404).json({ error: 'NFT not found.' });
@@ -90,7 +119,7 @@ function createApp(options = {}) {
     res.json({ item: mapNft(nft) });
   });
 
-  app.post('/api/nfts', upload.single('image'), (req, res) => {
+  app.post('/api/nfts', uploadLimiter, upload.single('image'), (req, res) => {
     if (!req.file) {
       res.status(400).json({ error: 'An image is required.' });
       return;
@@ -125,7 +154,7 @@ function createApp(options = {}) {
   });
 
   app.use((error, _req, res, _next) => {
-    if (error instanceof multer.MulterError || error.message === 'Only image uploads are supported.') {
+    if (error instanceof multer.MulterError || error.message === IMAGE_UPLOAD_ERROR) {
       res.status(400).json({ error: error.message });
       return;
     }

@@ -1,5 +1,6 @@
 const form = document.getElementById('upload-form');
 const feedback = document.getElementById('upload-feedback');
+const REDIRECT_DELAY_MS = 700;
 
 function showFeedback(message, status) {
   feedback.textContent = message;
@@ -28,7 +29,7 @@ form.addEventListener('submit', async (event) => {
     form.reset();
     window.setTimeout(() => {
       window.location.href = `/nft.html?catalog=${payload.item.catalogNumber}`;
-    }, 700);
+    }, REDIRECT_DELAY_MS);
   } catch (error) {
     showFeedback(error.message, 'error');
   }

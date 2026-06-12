@@ -3,6 +3,11 @@ const path = require('node:path');
 
 const DEFAULT_DATA_FILE = 'catalog.json';
 const DEFAULT_START_NUMBER = 1000;
+const VALUE_PER_VIEW = 0.12;
+const VALUE_PER_CREATOR_CHARACTER = 0.05;
+const MAX_CREATOR_BONUS = 1.5;
+const VALUE_PER_DESCRIPTION_CHARACTER = 0.01;
+const MAX_DESCRIPTION_BONUS = 2;
 
 function ensureDirectory(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
@@ -30,9 +35,15 @@ function clampPositiveNumber(value, fallback) {
 }
 
 function buildValueEstimate(nft) {
-  const interestBoost = nft.views * 0.12;
-  const creatorBoost = Math.min(nft.creator.length * 0.05, 1.5);
-  const descriptionBoost = Math.min(nft.description.length * 0.01, 2);
+  const interestBoost = nft.views * VALUE_PER_VIEW;
+  const creatorBoost = Math.min(
+    nft.creator.length * VALUE_PER_CREATOR_CHARACTER,
+    MAX_CREATOR_BONUS
+  );
+  const descriptionBoost = Math.min(
+    nft.description.length * VALUE_PER_DESCRIPTION_CHARACTER,
+    MAX_DESCRIPTION_BONUS
+  );
   const estimate = nft.askingPrice + interestBoost + creatorBoost + descriptionBoost;
   return Number(estimate.toFixed(2));
 }
@@ -89,16 +100,19 @@ class CatalogStore {
   create(input) {
     const state = this.readState();
     const catalogNumber = state.nextCatalogNumber;
+    const uploadedAt = new Date().toISOString();
     const nft = {
       catalogNumber,
-      title: String(input.title || '').trim() || `Untitled #${catalogNumber}`,
+      title:
+        String(input.title || '').trim() ||
+        `Untitled #${catalogNumber}-${uploadedAt.slice(11, 19).replace(/:/g, '')}`,
       creator: String(input.creator || '').trim() || 'Anonymous Creator',
       description: String(input.description || '').trim(),
       askingPrice: clampPositiveNumber(input.askingPrice, 1),
       contactLink: normalizeContactLink(input.contactLink),
       imageUrl: input.imageUrl,
       imageName: input.imageName,
-      uploadedAt: new Date().toISOString(),
+      uploadedAt,
       views: 0
     };
 
