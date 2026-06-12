@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload NFT Artwork</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <main class="page-shell compact">
+      <a class="back-link" href="/">← Back to marketplace</a>
+      <section class="glass form-card">
+        <p class="eyebrow">New listing</p>
+        <h1>Upload artwork and start trading</h1>
+        <p class="muted">
+          Add an image, a price, and a trader contact link so buyers can reach you directly.
+        </p>
+
+        <form id="upload-form" class="stacked-form">
+          <label>
+            Artwork title
+            <input type="text" name="title" placeholder="Neon Skyline" maxlength="120" />
+          </label>
+
+          <label>
+            Creator name
+            <input type="text" name="creator" placeholder="Ava Chen" maxlength="80" />
+          </label>
+
+          <label>
+            Description
+            <textarea
+              name="description"
+              rows="5"
+              placeholder="Tell traders why this image stands out."
+              maxlength="500"
+            ></textarea>
+          </label>
+
+          <label>
+            Asking price (ETH)
+            <input type="number" name="askingPrice" min="0" step="0.01" value="1.00" required />
+          </label>
+
+          <label>
+            Trader contact link
+            <input
+              type="url"
+              name="contactLink"
+              placeholder="https://your-site.example/contact"
+            />
+          </label>
+
+          <label>
+            Artwork image
+            <input type="file" name="image" accept="image/*" required />
+          </label>
+
+          <button class="button" type="submit">Publish listing</button>
+        </form>
+
+        <section id="upload-feedback" class="status-card hidden"></section>
+      </section>
+    </main>
+
+    <script src="/js/upload.js" defer></script>
+  </body>
+</html>
