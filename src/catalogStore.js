@@ -35,13 +35,15 @@ function clampPositiveNumber(value, fallback) {
 }
 
 function buildValueEstimate(nft) {
+  const creator = String(nft.creator || '');
+  const description = String(nft.description || '');
   const interestBoost = nft.views * VALUE_PER_VIEW;
   const creatorBoost = Math.min(
-    nft.creator.length * VALUE_PER_CREATOR_CHARACTER,
+    creator.length * VALUE_PER_CREATOR_CHARACTER,
     MAX_CREATOR_BONUS
   );
   const descriptionBoost = Math.min(
-    nft.description.length * VALUE_PER_DESCRIPTION_CHARACTER,
+    description.length * VALUE_PER_DESCRIPTION_CHARACTER,
     MAX_DESCRIPTION_BONUS
   );
   const estimate = nft.askingPrice + interestBoost + creatorBoost + descriptionBoost;
