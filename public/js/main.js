@@ -49,7 +49,7 @@ function createCard(item) {
 
   const link = document.createElement('a');
   link.className = 'button';
-  link.href = `/nft.html?catalog=${item.catalogNumber}`;
+  link.href = `nft.html?catalog=${item.catalogNumber}`;
   link.textContent = 'Open Listing';
   actions.appendChild(link);
 
