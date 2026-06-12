@@ -76,7 +76,6 @@ function createApp(options = {}) {
   const publicDir = options.publicDir || path.join(rootDir, 'public');
   const uploadsDir = options.uploadsDir || path.join(rootDir, 'uploads');
   const dataDir = options.dataDir || path.join(rootDir, 'data');
-  const indexFile = path.join(publicDir, 'index.html');
   const store = options.store || new CatalogStore({ dataDir });
   const upload = createUploadMiddleware(uploadsDir);
   const uploadLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 12 });
@@ -138,19 +137,8 @@ function createApp(options = {}) {
     res.status(201).json({ item: mapNft(nft) });
   });
 
-  app.use((req, res) => {
-    if (req.path.startsWith('/api/')) {
-      res.status(404).json({ error: 'Not found.' });
-      return;
-    }
-
-    res.sendFile(indexFile, (error) => {
-      if (!error) {
-        return;
-      }
-
-      res.status(404).send('Not found.');
-    });
+  app.use('/api', (_req, res) => {
+    res.status(404).json({ error: 'Not found.' });
   });
 
   app.use((error, _req, res, _next) => {
