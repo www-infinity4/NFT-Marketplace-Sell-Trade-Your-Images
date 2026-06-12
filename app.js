@@ -1,7 +1,6 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('node:path');
-const fs = require('node:fs');
 const { CatalogStore, ensureDirectory } = require('./src/catalogStore');
 const IMAGE_UPLOAD_ERROR = 'Only image uploads are supported.';
 
@@ -77,6 +76,7 @@ function createApp(options = {}) {
   const publicDir = options.publicDir || path.join(rootDir, 'public');
   const uploadsDir = options.uploadsDir || path.join(rootDir, 'uploads');
   const dataDir = options.dataDir || path.join(rootDir, 'data');
+  const indexFile = path.join(publicDir, 'index.html');
   const store = options.store || new CatalogStore({ dataDir });
   const upload = createUploadMiddleware(uploadsDir);
   const uploadLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 12 });
@@ -144,13 +144,13 @@ function createApp(options = {}) {
       return;
     }
 
-    const indexFile = path.join(publicDir, 'index.html');
-    if (fs.existsSync(indexFile)) {
-      res.sendFile(indexFile);
-      return;
-    }
+    res.sendFile(indexFile, (error) => {
+      if (!error) {
+        return;
+      }
 
-    res.status(404).send('Not found.');
+      res.status(404).send('Not found.');
+    });
   });
 
   app.use((error, _req, res, _next) => {
